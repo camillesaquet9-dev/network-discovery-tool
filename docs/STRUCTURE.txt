@@ -1,0 +1,73 @@
+Structure du Projet Network Discovery Tool
+===========================================
+
+network_discovery_tool/
+│
+├── src/                              Source du projet
+│   ├── __init__.py                   Marqueur de package Python
+│   ├── config.py                     Configuration globale
+│   ├── principal.py                  Point d'entree principal
+│   ├── utilitaires_reseau.py         Reconnaissance locale
+│   ├── enveloppe_nmap.py             Interface nmap
+│   ├── inference_type.py             Detection type equipements
+│   ├── explorateur_frontieres.py    Exploration reseaux bloques
+│   ├── detecteur_pivot.py            Detection pivots
+│   ├── mouvement_lateral.py          Pas de cote automatique
+│   ├── constructeur_topologie.py    Construction graphe
+│   ├── exporteur_verefoo.py          Export Verefoo/JSON
+│   └── generateur_rapports.py        Generation rapports
+│
+├── webapp/                           Interface web
+│   ├── app.py                        Serveur Flask
+│   ├── templates/
+│   │   └── index.html                Page principale
+│   ├── static/
+│   │   ├── css/
+│   │   │   └── style.css             Styles
+│   │   └── js/
+│   │       └── app.js                Logique frontend
+│   └── uploads/                      Fichiers uploades
+│       └── .gitkeep
+│
+├── output/                           Resultats des scans
+│   └── .gitkeep                      (fichiers generes automatiquement)
+│
+├── logs/                             Fichiers de logs
+│   └── .gitkeep                      (logs generes automatiquement)
+│
+├── docs/                             Documentation supplementaire
+│
+├── README.md                         Documentation principale
+├── QUICKSTART.md                     Guide demarrage rapide
+├── INSTALL.md                        Instructions installation
+├── ARCHITECTURE.md                   Documentation technique
+├── NOTES.md                          Notes de developpement
+├── STRUCTURE.txt                     Ce fichier
+│
+├── requirements.txt                  Dependances Python
+├── .gitignore                        Fichiers ignores par git
+│
+├── run.sh                            Script de lancement scan
+└── run_webapp.sh                     Script lancement webapp
+
+Fichiers generes apres execution :
+-----------------------------------
+
+output/
+├── network_scan_YYYYMMDD_HHMMSS_verefoo.xml    Export XML Verefoo
+├── network_scan_YYYYMMDD_HHMMSS_data.json      Donnees JSON
+├── network_scan_YYYYMMDD_HHMMSS_topology.graphml  Graphe NetworkX
+├── network_scan_YYYYMMDD_HHMMSS_topology.png   Visualisation
+├── network_scan_YYYYMMDD_HHMMSS_report.txt     Rapport complet
+└── network_scan_YYYYMMDD_HHMMSS_pivots.txt     Rapport pivots
+
+logs/
+└── decouverte_YYYYMMDD_HHMMSS.log              Logs d'execution
+
+Notes :
+-------
+- Le repertoire src/ contient tout le code source Python
+- Le repertoire webapp/ contient l'interface web de visualisation
+- Les repertoires output/ et logs/ sont crees automatiquement
+- Les fichiers .gitkeep permettent de versionner les dossiers vides
+- Les scripts .sh sont des raccourcis pour lancer l'outil

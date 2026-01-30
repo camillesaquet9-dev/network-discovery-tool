@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Discovery Viewer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-network-wired"></i>
+                <span>Network Discovery Viewer</span>
+            </div>
+            <div class="header-actions">
+                <button id="themeToggle" class="btn-icon" title="Changer le thème">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Upload Section -->
+        <section id="uploadSection" class="upload-section">
+            <div class="upload-container">
+                <div id="dropZone" class="drop-zone">
+                    <div class="drop-zone-content">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h2>Glissez-déposez votre fichier JSON</h2>
+                        <p>ou cliquez pour sélectionner un fichier</p>
+                        <input type="file" id="fileInput" accept=".json" hidden>
+                        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-folder-open"></i> Parcourir
+                        </button>
+                    </div>
+                </div>
+                <div class="upload-info">
+                    <p><i class="fas fa-info-circle"></i> Chargez un fichier <code>*_data.json</code> généré par le scanner</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Section (hidden initially) -->
+        <section id="dashboardSection" class="dashboard-section hidden">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon hosts">
+                        <i class="fas fa-desktop"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statHosts">0</span>
+                        <span class="stat-label">Hôtes découverts</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon networks">
+                        <i class="fas fa-sitemap"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statNetworks">0</span>
+                        <span class="stat-label">Réseaux</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon ports">
+                        <i class="fas fa-plug"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statPorts">0</span>
+                        <span class="stat-label">Ports ouverts</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon services">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statServices">0</span>
+                        <span class="stat-label">Services uniques</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-pie"></i> Types d'équipements</h3>
+                    <div class="chart-container">
+                        <canvas id="typeChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3><i class="fas fa-building"></i> Fabricants (MAC Vendor)</h3>
+                    <div class="vendors-list" id="vendorsList"></div>
+                </div>
+            </div>
+
+            <!-- Networks Section -->
+            <div class="section-card">
+                <h3><i class="fas fa-network-wired"></i> Réseaux découverts</h3>
+                <div class="networks-grid" id="networksGrid"></div>
+            </div>
+
+            <!-- Hosts Table -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h3><i class="fas fa-server"></i> Inventaire des équipements</h3>
+                    <div class="table-controls">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchInput" placeholder="Rechercher (IP, hostname, service...)">
+                        </div>
+                        <select id="filterType" class="filter-select">
+                            <option value="">Tous les types</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table" id="hostsTable">
+                        <thead>
+                            <tr>
+                                <th data-sort="ip">IP <i class="fas fa-sort"></i></th>
+                                <th data-sort="hostname">Hostname <i class="fas fa-sort"></i></th>
+                                <th data-sort="type">Type <i class="fas fa-sort"></i></th>
+                                <th data-sort="mac">MAC</th>
+                                <th data-sort="vendor">Fabricant</th>
+                                <th data-sort="ports">Ports</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hostsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Host Details Modal -->
+    <div id="hostModal" class="modal hidden">
+        <div class="modal-overlay" onclick="closeModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-info-circle"></i> <span id="modalTitle">Détails de l'hôte</span></h2>
+                <button class="btn-icon" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

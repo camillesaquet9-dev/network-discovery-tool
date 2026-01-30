@@ -1,0 +1,39 @@
+# Fichiers Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environnements virtuels
+venv/
+env/
+ENV/
+
+# Resultats de scan
+output/*.xml
+output/*.json
+output/*.graphml
+output/*.png
+output/*.txt
+
+# Logs
+logs/*.log
+
+# Fichiers temporaires
+*.tmp
+*.swp
+*~
+
+# Fichiers IDE
+.vscode/
+.idea/
+*.iml
+
+# Fichiers systeme
+.DS_Store
+Thumbs.db
+
+# Uploads webapp
+webapp/uploads/*
+!webapp/uploads/.gitkeep
