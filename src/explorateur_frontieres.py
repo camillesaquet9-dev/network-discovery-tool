@@ -8,7 +8,9 @@ from config import (
     NB_TENTATIVES_BLOCAGE,
     TIMEOUT_TRACEROUTE,
     MAX_SAUTS_TRACEROUTE,
-    PLAGES_PRIVEES
+    PLAGES_PRIVEES,
+    PLAGE_EXPLORATION_OCTET,
+    MAX_RESEAUX_SANS_CONFIRMATION
 )
 
 logger = logging.getLogger(__name__)
@@ -20,7 +22,8 @@ class ExplorateurFrontieres:
         self.reseaux_bloques = []
         self.equipements_frontieres = []
 
-    def explorer_au_dela_connu(self, reseaux_connus: List[str], hotes_decouverts: List[Dict]) -> Dict:
+    def explorer_au_dela_connu(self, reseaux_connus: List[str], hotes_decouverts: List[Dict],
+                               limite: int = 10) -> Dict:
         logger.info("[ExplorateurFrontieres] Exploration frontieres reseau")
 
         reseaux_candidats = set()
@@ -29,13 +32,27 @@ class ExplorateurFrontieres:
         passerelles = self._identifier_passerelles(hotes_decouverts)
         logger.info(f"[ExplorateurFrontieres] {len(passerelles)} passerelles identifiees")
 
+        if not passerelles:
+            passerelles = self._identifier_passerelles_par_ip(hotes_decouverts)
+            if passerelles:
+                logger.info(f"[ExplorateurFrontieres] {len(passerelles)} passerelles potentielles (par IP)")
+
         for passerelle in passerelles:
             ip_passerelle = passerelle["ip"]
             logger.debug(f"  Analyse passerelle {ip_passerelle}")
 
             reseaux_test = self._generer_reseaux_candidats(ip_passerelle, reseaux_connus)
+            reseaux_test = self._filtrer_reseaux_virtuels(reseaux_test)
 
+            compteur = 0
             for reseau in reseaux_test:
+                if compteur >= limite:
+                    logger.debug(f"    Limite atteinte ({limite} reseaux)")
+                    break
+
+                if reseau in reseaux_candidats:
+                    continue
+
                 logger.debug(f"    Test reseau {reseau}")
 
                 est_accessible, info_blocage = self._tester_accessibilite_reseau(
@@ -45,6 +62,7 @@ class ExplorateurFrontieres:
                 if est_accessible:
                     reseaux_candidats.add(reseau)
                     logger.info(f"  Reseau {reseau} accessible via {ip_passerelle}")
+                    compteur += 1
                 elif info_blocage:
                     reseaux_bloques.append({
                         "reseau": reseau,
@@ -52,17 +70,6 @@ class ExplorateurFrontieres:
                         "raison": info_blocage["raison"],
                         "dernier_saut": info_blocage.get("dernier_saut")
                     })
-                    logger.warning(f"  Reseau {reseau} bloque: {info_blocage['raison']}")
-
-        for plage_privee in PLAGES_PRIVEES:
-            if plage_privee not in reseaux_connus:
-                sous_reseaux = self._generer_sous_reseaux_depuis_plage(plage_privee, reseaux_connus)
-                for sous_reseau in sous_reseaux:
-                    if sous_reseau not in reseaux_connus and sous_reseau not in reseaux_candidats:
-                        est_accessible, info_blocage = self._tester_accessibilite_reseau(sous_reseau)
-                        if est_accessible:
-                            reseaux_candidats.add(sous_reseau)
-                            logger.info(f"  Reseau prive {sous_reseau} decouvert")
 
         resultats = {
             "reseaux_candidats": list(reseaux_candidats),
@@ -75,6 +82,48 @@ class ExplorateurFrontieres:
                    f"{len(reseaux_bloques)} reseaux bloques")
 
         return resultats
+
+    def _identifier_passerelles_par_ip(self, hotes: List[Dict]) -> List[Dict]:
+        passerelles = []
+        for hote in hotes:
+            ip = hote.get("ip", "")
+            try:
+                octets = ip.split('.')
+                if len(octets) == 4:
+                    dernier_octet = int(octets[3])
+                    if dernier_octet in [1, 254]:
+                        passerelles.append(hote)
+                        logger.debug(f"  Passerelle potentielle: {ip} (IP typique)")
+            except (ValueError, IndexError):
+                pass
+        return passerelles
+
+    def _filtrer_reseaux_virtuels(self, reseaux: List[str]) -> List[str]:
+        filtres = []
+        for reseau in reseaux:
+            if self._est_reseau_virtuel(reseau):
+                logger.debug(f"    Exclus reseau virtuel: {reseau}")
+                continue
+            filtres.append(reseau)
+        return filtres
+
+    def _est_reseau_virtuel(self, reseau: str) -> bool:
+        try:
+            net = ipaddress.ip_network(reseau, strict=False)
+            addr_str = str(net.network_address)
+
+            if addr_str.startswith('169.254.'):
+                return True
+
+            if addr_str.startswith('172.17.') or addr_str.startswith('172.18.'):
+                return True
+
+            if addr_str.startswith('100.64.'):
+                return True
+
+        except ValueError:
+            pass
+        return False
 
     def _identifier_passerelles(self, hotes: List[Dict]) -> List[Dict]:
         passerelles = []
@@ -100,7 +149,7 @@ class ExplorateurFrontieres:
                 octets_base = octets[:2]
                 troisieme_octet = int(octets[2])
 
-                for decalage in range(-2, 3):
+                for decalage in range(-PLAGE_EXPLORATION_OCTET, PLAGE_EXPLORATION_OCTET + 1):
                     nouveau_troisieme = troisieme_octet + decalage
                     if 0 <= nouveau_troisieme <= 255:
                         reseau_candidat = f"{octets_base[0]}.{octets_base[1]}.{nouveau_troisieme}.0/24"
@@ -117,10 +166,24 @@ class ExplorateurFrontieres:
                             candidats.append(reseau_test)
 
                 elif premier_octet == 10:
-                    for decalage in range(-2, 3):
+                    for decalage in range(-PLAGE_EXPLORATION_OCTET, PLAGE_EXPLORATION_OCTET + 1):
                         nouveau_deuxieme = deuxieme_octet + decalage
                         if 0 <= nouveau_deuxieme <= 255:
                             reseau_candidat = f"10.{nouveau_deuxieme}.0.0/24"
+                            if reseau_candidat not in reseaux_connus:
+                                candidats.append(reseau_candidat)
+                    for decalage in range(-PLAGE_EXPLORATION_OCTET, PLAGE_EXPLORATION_OCTET + 1):
+                        nouveau_troisieme = troisieme_octet + decalage
+                        if 0 <= nouveau_troisieme <= 255:
+                            reseau_candidat = f"10.{deuxieme_octet}.{nouveau_troisieme}.0/24"
+                            if reseau_candidat not in reseaux_connus and reseau_candidat not in candidats:
+                                candidats.append(reseau_candidat)
+
+                elif premier_octet == 172 and 16 <= deuxieme_octet <= 31:
+                    for decalage in range(-PLAGE_EXPLORATION_OCTET, PLAGE_EXPLORATION_OCTET + 1):
+                        nouveau_deuxieme = deuxieme_octet + decalage
+                        if 16 <= nouveau_deuxieme <= 31:
+                            reseau_candidat = f"172.{nouveau_deuxieme}.0.0/24"
                             if reseau_candidat not in reseaux_connus:
                                 candidats.append(reseau_candidat)
 

@@ -1,0 +1,301 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key id="d9" for="edge" attr.name="reseau" attr.type="string"/>
+<key id="d8" for="edge" attr.name="type" attr.type="string"/>
+<key id="d7" for="node" attr.name="type" attr.type="string"/>
+<key id="d6" for="node" attr.name="ports_liste" attr.type="string"/>
+<key id="d5" for="node" attr.name="ports" attr.type="long"/>
+<key id="d4" for="node" attr.name="os" attr.type="string"/>
+<key id="d3" for="node" attr.name="type_fonctionnel" attr.type="string"/>
+<key id="d2" for="node" attr.name="nom_hote" attr.type="string"/>
+<key id="d1" for="node" attr.name="ip" attr.type="string"/>
+<key id="d0" for="node" attr.name="label" attr.type="string"/>
+<graph edgedefault="undirected"><node id="192.168.1.1">
+  <data key="d0">GEN8
+(192.168.1.1)</data>
+  <data key="d1">192.168.1.1</data>
+  <data key="d2">GEN8</data>
+  <data key="d3">WEBCLIENT</data>
+  <data key="d4"></data>
+  <data key="d5">0</data>
+  <data key="d6"></data>
+  <data key="d7">hote</data>
+</node>
+<node id="192.168.1.7">
+  <data key="d0">DESKTOP-9R7QBDD
+(192.168.1.7)</data>
+  <data key="d1">192.168.1.7</data>
+  <data key="d2">DESKTOP-9R7QBDD</data>
+  <data key="d3">WEBCLIENT</data>
+  <data key="d4"></data>
+  <data key="d5">0</data>
+  <data key="d6"></data>
+  <data key="d7">hote</data>
+</node>
+<node id="192.168.1.84">
+  <data key="d0">CONNECTTV_V3_SAGEMCOM_ABEB
+(192.168.1.84)</data>
+  <data key="d1">192.168.1.84</data>
+  <data key="d2">CONNECTTV_V3_SAGEMCOM_ABEB</data>
+  <data key="d3">WEBCLIENT</data>
+  <data key="d4"></data>
+  <data key="d5">0</data>
+  <data key="d6"></data>
+  <data key="d7">hote</data>
+</node>
+<node id="192.168.1.127">
+  <data key="d0">RsiVideotech
+(192.168.1.127)</data>
+  <data key="d1">192.168.1.127</data>
+  <data key="d2">RsiVideotech</data>
+  <data key="d3">WEBCLIENT</data>
+  <data key="d4"></data>
+  <data key="d5">0</data>
+  <data key="d6"></data>
+  <data key="d7">hote</data>
+</node>
+<node id="192.168.1.136">
+  <data key="d0">192.168.1.136
+[49152,62078]</data>
+  <data key="d1">192.168.1.136</data>
+  <data key="d2"></data>
+  <data key="d3">WEBCLIENT</data>
+  <data key="d4"></data>
+  <data key="d5">2</data>
+  <data key="d6">49152,62078</data>
+  <data key="d7">hote</data>
+</node>
+<node id="192.168.1.152">
+  <data key="d0">DESKTOP-9R7QBDD
+(192.168.1.152)</data>
+  <data key="d1">192.168.1.152</data>
+  <data key="d2">DESKTOP-9R7QBDD</data>
+  <data key="d3">WEBCLIENT</data>
+  <data key="d4"></data>
+  <data key="d5">0</data>
+  <data key="d6"></data>
+  <data key="d7">hote</data>
+</node>
+<node id="192.168.1.211">
+  <data key="d0">192.168.1.211</data>
+  <data key="d1">192.168.1.211</data>
+  <data key="d2"></data>
+  <data key="d3">WEBCLIENT</data>
+  <data key="d4"></data>
+  <data key="d5">0</data>
+  <data key="d6"></data>
+  <data key="d7">hote</data>
+</node>
+<node id="192.168.1.220">
+  <data key="d0">192.168.1.220
+[49152,62078]</data>
+  <data key="d1">192.168.1.220</data>
+  <data key="d2"></data>
+  <data key="d3">WEBCLIENT</data>
+  <data key="d4"></data>
+  <data key="d5">2</data>
+  <data key="d6">49152,62078</data>
+  <data key="d7">hote</data>
+</node>
+<node id="192.168.1.240">
+  <data key="d0">D2260Gr2
+(192.168.1.240)
+[22,49152]</data>
+  <data key="d1">192.168.1.240</data>
+  <data key="d2">D2260Gr2</data>
+  <data key="d3">WEBCLIENT</data>
+  <data key="d4"></data>
+  <data key="d5">2</data>
+  <data key="d6">22,49152</data>
+  <data key="d7">hote</data>
+</node>
+<node id="192.168.1.131">
+  <data key="d0">192.168.1.131</data>
+  <data key="d1">192.168.1.131</data>
+  <data key="d2"></data>
+  <data key="d3">WEBCLIENT</data>
+  <data key="d4"></data>
+  <data key="d5">0</data>
+  <data key="d6"></data>
+  <data key="d7">hote</data>
+</node>
+<edge source="192.168.1.1" target="192.168.1.7">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.1" target="192.168.1.84">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.1" target="192.168.1.127">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.1" target="192.168.1.136">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.1" target="192.168.1.152">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.1" target="192.168.1.211">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.1" target="192.168.1.220">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.1" target="192.168.1.240">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.1" target="192.168.1.131">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.7" target="192.168.1.84">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.7" target="192.168.1.127">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.7" target="192.168.1.136">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.7" target="192.168.1.152">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.7" target="192.168.1.211">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.7" target="192.168.1.220">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.7" target="192.168.1.240">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.7" target="192.168.1.131">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.84" target="192.168.1.127">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.84" target="192.168.1.136">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.84" target="192.168.1.152">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.84" target="192.168.1.211">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.84" target="192.168.1.220">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.84" target="192.168.1.240">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.84" target="192.168.1.131">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.127" target="192.168.1.136">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.127" target="192.168.1.152">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.127" target="192.168.1.211">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.127" target="192.168.1.220">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.127" target="192.168.1.240">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.127" target="192.168.1.131">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.136" target="192.168.1.152">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.136" target="192.168.1.211">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.136" target="192.168.1.220">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.136" target="192.168.1.240">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.136" target="192.168.1.131">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.152" target="192.168.1.211">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.152" target="192.168.1.220">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.152" target="192.168.1.240">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.152" target="192.168.1.131">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.211" target="192.168.1.220">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.211" target="192.168.1.240">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.211" target="192.168.1.131">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.220" target="192.168.1.240">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.220" target="192.168.1.131">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+<edge source="192.168.1.240" target="192.168.1.131">
+  <data key="d8">meme_reseau</data>
+  <data key="d9">192.168.1.0/24</data>
+</edge>
+</graph></graphml>

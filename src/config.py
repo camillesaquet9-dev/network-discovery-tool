@@ -1,12 +1,28 @@
 import os
 
 # Parametres Nmap
-TIMING_NMAP = 3
-PORTS_TOP_NMAP = 1000
-TIMEOUT_HOTE_NMAP = 120
+TIMING_NMAP = 4
+PORTS_TOP_NMAP = 100
+PORTS_SPECIFIQUES = [
+    21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 443, 445,
+    993, 995, 1433, 1521, 3306, 3389, 5432, 5900, 6379, 8080, 8443, 27017
+]
+TIMEOUT_HOTE_NMAP = 180
 ACTIVER_DETECTION_OS = True
 ACTIVER_SCRIPTS_NSE = True
-SCRIPTS_NSE = "default,discovery,safe"
+SCRIPTS_NSE = "default,safe"
+
+# Mode sans privileges root
+MODE_SANS_ROOT = False
+
+# Mode interactif
+MODE_INTERACTIF = True
+DEMANDER_CONFIRMATION_SCAN = True
+
+# Profondeur de scan
+PROFONDEUR_LEGER = 1
+PROFONDEUR_NORMAL = 2
+PROFONDEUR_COMPLET = 3
 
 # Decouverte reseau
 MASQUES_RESEAU = [24, 16]
@@ -15,7 +31,11 @@ PLAGES_PRIVEES = [
     "172.16.0.0/12",
     "192.168.0.0/16"
 ]
-MAX_ITERATIONS_DECOUVERTE = 5
+MAX_ITERATIONS_DECOUVERTE = 3
+MAX_RESEAUX_SANS_CONFIRMATION = 3
+
+# Plage exploration des octets adjacents (pour decouverte reseaux voisins)
+PLAGE_EXPLORATION_OCTET = 5
 
 # Detection blocages
 NB_TENTATIVES_BLOCAGE = 3
@@ -55,6 +75,8 @@ COULEURS_TYPE_FONCTIONNEL = {
     "MAILSERVER": "#9C27B0",
     "DATABASE": "#795548",
     "ROUTER": "#607D8B",
+    "PRINTER": "#00BCD4",
+    "IOT": "#E91E63",
     "UNKNOWN": "#9E9E9E"
 }
 

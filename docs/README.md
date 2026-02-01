@@ -1,16 +1,18 @@
 # Outil de Decouverte Reseau Automatise
 
-Projet realise dans le cadre de la SAE 5.01 - Administation Reseau
+Projet realise dans le cadre de la SAE 5.01 - Administration Reseau
 IUT de Lannion - BUT Reseaux et Telecommunications
 
 ## Presentation
 
-Cet outil permet de faire une decouverte automatique des equipements sur un reseau local et de generer une cartographie complete de l'infrastructure. Le projet utilise nmap pour scanner les reseaux et identifier les differents types d'equipements (serveurs web, firewalls, routeurs, etc.).
+Cet outil permet de faire une decouverte automatique des equipements sur un reseau local et de generer une cartographie complete de l'infrastructure. Le projet utilise nmap pour scanner les reseaux et identifier les differents types d'equipements (serveurs web, firewalls, routeurs, imprimantes, objets connectes, etc.).
 
 L'outil est capable de :
+- Analyser la machine locale au demarrage pour afficher le contexte
+- Proposer un menu interactif pour choisir le type de scan
 - Detecter automatiquement les reseaux accessibles
 - Scanner les equipements et identifier leurs services
-- Determiner le type fonctionel de chaque machine
+- Determiner le type fonctionel de chaque machine (avec detection amelioree)
 - Detecter les reseaux bloques par des firewalls
 - Suggerer des pivots pour continuer l'exploration
 - Executer automatiquement des "pas de cote" vers les pivots
@@ -21,6 +23,7 @@ L'outil est capable de :
 
 Le projet est organise en plusieurs modules :
 - `config.py` - Configuration globale et parametres
+- `menu_interactif.py` - Interface interactive en ligne de commande
 - `utilitaires_reseau.py` - Reconnaissance locale passive
 - `enveloppe_nmap.py` - Interface avec nmap pour les scans
 - `inference_type.py` - Detection du type fonctionel des equipements
@@ -61,12 +64,36 @@ Pour le pas de cote automatique (optionnel) :
 
 ## Utilisation
 
-### Scan basique
+### Mode Interactif (par defaut)
 
-Lancement d'un scan simple avec detection automatique des reseaux :
+Lancement du script avec le menu interactif :
 
 ```bash
 sudo python3 src/principal.py
+```
+
+Le script va d'abord analyser la machine locale et affciher les informations de contexte (interfaces, reseaux detectes, passerelles). Ensuite un menu permet de choisir parmi plusieurs options :
+
+1. **Scan rapide** - Scan leger avec detection de services basique
+2. **Scan approfondi** - Scan complet avec detection OS et scripts NSE
+3. **Reseau specifique** - Scanner un reseau precis en CIDR
+4. **Configuration** - Modifier les parametres de scan
+5. **Quitter** - Sortir du programme
+
+### Niveaux de Profondeur
+
+Le scan peut etre effectue avec differents niveauxde profondeur :
+
+- **LEGER (1)** : Scan rapide, ports principaux uniquement
+- **NORMAL (2)** : Detection de version des services activee
+- **COMPLET (3)** : Detection OS + scripts NSE + version intensive
+
+### Scan en Ligne de Commande
+
+Pour un scan sans interface interactive :
+
+```bash
+sudo python3 src/principal.py --no-interactive --target 192.168.1.0/24
 ```
 
 ### Scan approfondi
@@ -75,12 +102,6 @@ Avec detection OS et scripts NSE :
 
 ```bash
 sudo python3 src/principal.py --deep
-```
-
-### Scan d'un reseau specifique
-
-```bash
-sudo python3 src/principal.py --target 192.168.1.0/24
 ```
 
 ### Avec pas de cote automatique
@@ -97,12 +118,24 @@ Avec cle SSH :
 sudo python3 src/principal.py --pas-de-cote --ssh-key ~/.ssh/id_rsa
 ```
 
+### Scan sans privileges root
+
+Pour lancer un scan sans avoir besoin de sudo :
+
+```bash
+python3 src/principal.py --no-root
+```
+
+Ce mode utilise des techniques de scan TCP connect qui ne necessitent pas de privileges root, mais la detection OS n'est pas disponble.
+
 ### Options disponibles
 
 ```
 --target NETWORK        Reseau cible au format CIDR
---deep                  Active le scan approfondi
+--deep                  Active le scan approfondi (profondeur COMPLET)
 --no-pivot              Desactive la detection de pivots
+--no-root               Mode sans privileges root (pas de detection OS)
+--no-interactive        Desactive le menu interactif
 --pas-de-cote           Active l'execution automatique sur les pivots
 --ssh-user USER         Utilisateur pour connexion SSH (defaut: root)
 --ssh-key PATH          Chemin vers la cle SSH privee
@@ -141,6 +174,24 @@ L'interface permet de :
 - Voir les details de chaque machine
 - Filtrer par type d'equipement
 
+## Types d'Equipements Detectes
+
+L'outil peut identifier les types suivants :
+
+- **WEBSERVER** : Serveur web (Apache, nginx, IIS, etc.)
+- **WEBCLIENT** : Poste client avec peu de services
+- **FIREWALL** : Pare-feu ou equipement de securite
+- **NAT** : Equipement faisant de la traduction d'adresses
+- **DNS** : Serveur DNS
+- **MAILSERVER** : Serveur de messagerie (SMTP, IMAP, POP3)
+- **DATABASE** : Serveur de base de donnees (MySQL, PostgreSQL, etc.)
+- **ROUTER** : Routeur reseau (detecte par IP .1/.254 ou fabricant MAC)
+- **PRINTER** : Imprimante reseau (HP, Canon, Epson, etc.)
+- **IOT** : Objet connecte (ESP32, Raspberry Pi, capteurs, etc.)
+- **UNKNOWN** : Type non determine
+
+La detection utilise plusieurs criteres : ports ouverts, services detectes, fabricant MAC, nom d'hote et informations OS.
+
 ## Fonctionnement du Pas de Cote
 
 Le pas de cote (lateral movement) permet d'explorer automatiquement les reseaux bloques en utilisant les pivots detectes. Le systeme supporte plusieurs protocoles :
@@ -165,7 +216,8 @@ Le processus est le suivant :
 - Les scans peuvent etre longs sur des reseaux de grande taille
 - La detection OS est approximative et peut donner des faux positifs
 - Le pas de cote necessite un acces SSH/Telnet/WinRM au pivot
-- Certains firewalls peuvent bloquer completement le scan
+- Certains firewalls peuvent bloquer completemnt le scan
+- Les reseaux virtuels (Docker, link-local) sont filtrés automatiquement
 
 ## Aspects Ethiques et Legaux
 

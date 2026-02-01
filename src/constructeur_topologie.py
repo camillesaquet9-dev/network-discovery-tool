@@ -46,20 +46,33 @@ class ConstructeurTopologie:
         nom_hote = hote.get("nom_hote")
         type_fonctionnel = hote.get("type_fonctionnel", "UNKNOWN")
 
+        ports_ouverts = [p["port"] for p in hote.get("ports", []) if p.get("etat") in ["open", "open|filtered"]]
+        ports_str = ""
+        if ports_ouverts:
+            ports_affichage = ports_ouverts[:5]
+            ports_str = ",".join(str(p) for p in ports_affichage)
+            if len(ports_ouverts) > 5:
+                ports_str += f"...(+{len(ports_ouverts) - 5})"
+
         if nom_hote:
             label = f"{nom_hote}\n({ip})"
         else:
             label = ip
 
+        if ports_str:
+            label += f"\n[{ports_str}]"
+
+        ports_str_liste = ",".join(str(p) for p in ports_ouverts) if ports_ouverts else ""
+
         self.graphe.add_node(
             ip,
             label=label,
             ip=ip,
-            nom_hote=nom_hote,
+            nom_hote=nom_hote or "",
             type_fonctionnel=type_fonctionnel,
-            os=hote.get("os"),
+            os=hote.get("os") or "",
             ports=len(hote.get("ports", [])),
-            services=hote.get("services", []),
+            ports_liste=ports_str_liste,
             type="hote"
         )
 

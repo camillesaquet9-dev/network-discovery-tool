@@ -10,6 +10,24 @@ from config import (
     MOTS_CLES_NAT
 )
 
+FABRICANTS_ROUTEUR = [
+    "cisco", "juniper", "mikrotik", "ubiquiti", "netgear", "tp-link",
+    "d-link", "asus", "linksys", "zyxel", "huawei", "fortinet", "paloalto"
+]
+
+FABRICANTS_SERVEUR = [
+    "dell", "hp", "hpe", "ibm", "lenovo", "supermicro", "fujitsu"
+]
+
+FABRICANTS_IOT = [
+    "espressif", "raspberry", "arduino", "particle", "texas instruments",
+    "tuya", "sonoff", "shelly", "tasmota", "xiaomi", "philips hue"
+]
+
+FABRICANTS_IMPRIMANTE = [
+    "hp", "canon", "epson", "brother", "xerox", "lexmark", "ricoh", "kyocera"
+]
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,7 +41,10 @@ class MoteurInferenceType:
         "DNS",
         "DATABASE",
         "ROUTER",
-        "FORWARDER"
+        "PRINTER",
+        "IOT",
+        "FORWARDER",
+        "UNKNOWN"
     ]
 
     def __init__(self):
@@ -37,8 +58,10 @@ class MoteurInferenceType:
         services = donnees_hote.get("services", [])
         info_os = donnees_hote.get("os") or ""
         sortie_scripts = donnees_hote.get("sortie_scripts", {})
+        fabricant_mac = donnees_hote.get("fabricant_mac", "") or ""
+        nom_hote = donnees_hote.get("nom_hote", "") or ""
 
-        ports_ouverts = [p["port"] for p in ports if p.get("etat") == "open"]
+        ports_ouverts = [p["port"] for p in ports if p.get("etat") in ["open", "open|filtered"]]
         ports_filtres = [p["port"] for p in ports if p.get("etat") == "filtered"]
 
         noms_services = [s.get("service", "").lower() for s in ports if s.get("service")]
@@ -48,12 +71,23 @@ class MoteurInferenceType:
             info_os.lower() if info_os else "",
             " ".join(noms_services),
             " ".join(produits_services),
-            " ".join(sortie_scripts.values())
+            " ".join(sortie_scripts.values()),
+            fabricant_mac.lower(),
+            nom_hote.lower()
         ])
 
         logger.debug(f"  Ports ouverts: {ports_ouverts}")
         logger.debug(f"  Ports filtres: {ports_filtres}")
         logger.debug(f"  Services: {noms_services}")
+        logger.debug(f"  Fabricant MAC: {fabricant_mac}")
+
+        if self._est_routeur_par_ip(ip):
+            logger.info(f"[InferenceType] {ip} -> ROUTER (IP passerelle)")
+            return "ROUTER"
+
+        if self._est_routeur_par_fabricant(fabricant_mac):
+            logger.info(f"[InferenceType] {ip} -> ROUTER (fabricant {fabricant_mac})")
+            return "ROUTER"
 
         if self._est_firewall(ports_ouverts, ports_filtres, tout_texte, sortie_scripts):
             logger.info(f"[InferenceType] {ip} -> FIREWALL")
@@ -62,6 +96,10 @@ class MoteurInferenceType:
         if self._est_nat(tout_texte, sortie_scripts):
             logger.info(f"[InferenceType] {ip} -> NAT")
             return "NAT"
+
+        if self._est_routeur(info_os, tout_texte):
+            logger.info(f"[InferenceType] {ip} -> ROUTER")
+            return "ROUTER"
 
         if self._est_webserver(ports_ouverts, noms_services, produits_services):
             logger.info(f"[InferenceType] {ip} -> WEBSERVER")
@@ -79,9 +117,21 @@ class MoteurInferenceType:
             logger.info(f"[InferenceType] {ip} -> DATABASE")
             return "DATABASE"
 
-        if self._est_routeur(info_os, tout_texte):
-            logger.info(f"[InferenceType] {ip} -> ROUTER")
-            return "ROUTER"
+        if self._est_imprimante(ports_ouverts, fabricant_mac, tout_texte):
+            logger.info(f"[InferenceType] {ip} -> PRINTER")
+            return "PRINTER"
+
+        if self._est_iot(ports_ouverts, fabricant_mac, tout_texte):
+            logger.info(f"[InferenceType] {ip} -> IOT")
+            return "IOT"
+
+        if self._est_serveur_generique(ports_ouverts, fabricant_mac):
+            logger.info(f"[InferenceType] {ip} -> WEBSERVER (serveur generique)")
+            return "WEBSERVER"
+
+        if len(ports_ouverts) == 0 and len(ports_filtres) == 0:
+            logger.info(f"[InferenceType] {ip} -> UNKNOWN (aucun port)")
+            return "UNKNOWN"
 
         if self._est_webclient(ports_ouverts):
             logger.info(f"[InferenceType] {ip} -> WEBCLIENT")
@@ -89,6 +139,36 @@ class MoteurInferenceType:
 
         logger.info(f"[InferenceType] {ip} -> UNKNOWN")
         return "UNKNOWN"
+
+    def _est_routeur_par_ip(self, ip: str) -> bool:
+        try:
+            octets = ip.split('.')
+            if len(octets) == 4:
+                dernier_octet = int(octets[3])
+                if dernier_octet in [1, 254]:
+                    return True
+        except (ValueError, IndexError):
+            pass
+        return False
+
+    def _est_routeur_par_fabricant(self, fabricant: str) -> bool:
+        fabricant_lower = fabricant.lower()
+        for fab in FABRICANTS_ROUTEUR:
+            if fab in fabricant_lower:
+                return True
+        return False
+
+    def _est_serveur_generique(self, ports_ouverts: List[int], fabricant: str) -> bool:
+        fabricant_lower = fabricant.lower()
+        for fab in FABRICANTS_SERVEUR:
+            if fab in fabricant_lower:
+                return True
+
+        ports_serveur = [22, 80, 443, 3389, 5900]
+        if any(p in ports_ouverts for p in ports_serveur):
+            return len(ports_ouverts) >= 2
+
+        return False
 
     def _est_firewall(self, ports_ouverts: List[int], ports_filtres: List[int],
                      texte: str, scripts: Dict) -> bool:
@@ -194,16 +274,62 @@ class MoteurInferenceType:
         return False
 
     def _est_webclient(self, ports_ouverts: List[int]) -> bool:
-        ports_client_uniquement = [22, 3389]
+        if len(ports_ouverts) == 0:
+            return False
 
-        ports_serveur_ouverts = [p for p in ports_ouverts if p in PORTS_SERVEUR and p not in ports_client_uniquement]
+        ports_client_typiques = [22, 3389, 5900]
+        ports_non_client = [p for p in ports_ouverts if p not in ports_client_typiques]
 
-        if len(ports_serveur_ouverts) == 0:
-            logger.debug("    Indice WEBCLIENT: aucun port serveur")
+        if len(ports_non_client) == 0 and len(ports_ouverts) <= 2:
+            logger.debug("    Indice WEBCLIENT: ports client uniquement (SSH/RDP/VNC)")
             return True
 
-        if len(ports_serveur_ouverts) < MIN_PORTS_SERVEUR:
+        ports_serveur_ouverts = [p for p in ports_ouverts if p in PORTS_SERVEUR]
+        if len(ports_serveur_ouverts) < MIN_PORTS_SERVEUR and len(ports_ouverts) > 0:
             logger.debug(f"    Indice WEBCLIENT: peu de ports serveur ({len(ports_serveur_ouverts)})")
+            return True
+
+        return False
+
+    def _est_imprimante(self, ports_ouverts: List[int], fabricant: str, texte: str) -> bool:
+        ports_imprimante = [9100, 515, 631, 9101, 9102]
+
+        ports_imp_ouverts = [p for p in ports_ouverts if p in ports_imprimante]
+        if ports_imp_ouverts:
+            logger.debug(f"    Indice PRINTER: ports imprimante {ports_imp_ouverts}")
+            return True
+
+        fabricant_lower = fabricant.lower()
+        for fab in FABRICANTS_IMPRIMANTE:
+            if fab in fabricant_lower:
+                logger.debug(f"    Indice PRINTER: fabricant {fab}")
+                return True
+
+        mots_cles_imprimante = ["printer", "print", "laserjet", "inkjet", "deskjet", "officejet"]
+        for mot in mots_cles_imprimante:
+            if mot in texte:
+                logger.debug(f"    Indice PRINTER: mot-cle '{mot}'")
+                return True
+
+        return False
+
+    def _est_iot(self, ports_ouverts: List[int], fabricant: str, texte: str) -> bool:
+        fabricant_lower = fabricant.lower()
+        for fab in FABRICANTS_IOT:
+            if fab in fabricant_lower:
+                logger.debug(f"    Indice IOT: fabricant {fab}")
+                return True
+
+        mots_cles_iot = ["esp8266", "esp32", "raspberry", "arduino", "tasmota", "shelly",
+                        "smart", "sensor", "thermostat", "camera ip", "iot", "mqtt"]
+        for mot in mots_cles_iot:
+            if mot in texte:
+                logger.debug(f"    Indice IOT: mot-cle '{mot}'")
+                return True
+
+        ports_iot = [1883, 8883, 5683, 5684]
+        if any(p in ports_ouverts for p in ports_iot):
+            logger.debug("    Indice IOT: port MQTT/CoAP")
             return True
 
         return False

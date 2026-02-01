@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NFV xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <graphs>
+        <graph id="0">
+            <node functional_type="WEBCLIENT" name="192.168.1.1">
+                <neighbour name="192.168.1.7"/>
+                <neighbour name="192.168.1.84"/>
+                <neighbour name="192.168.1.127"/>
+                <neighbour name="192.168.1.136"/>
+                <neighbour name="192.168.1.152"/>
+                <neighbour name="192.168.1.211"/>
+                <neighbour name="192.168.1.220"/>
+                <neighbour name="192.168.1.240"/>
+                <neighbour name="192.168.1.131"/>
+                <configuration description="Configuration auto-generee pour GEN8" name="conf_192_168_1_1">
+                    <webclient nameWebServer="unknown"/>
+                </configuration>
+            </node>
+            <node functional_type="WEBCLIENT" name="192.168.1.7">
+                <neighbour name="192.168.1.1"/>
+                <neighbour name="192.168.1.84"/>
+                <neighbour name="192.168.1.127"/>
+                <neighbour name="192.168.1.136"/>
+                <neighbour name="192.168.1.152"/>
+                <neighbour name="192.168.1.211"/>
+                <neighbour name="192.168.1.220"/>
+                <neighbour name="192.168.1.240"/>
+                <neighbour name="192.168.1.131"/>
+                <configuration description="Configuration auto-generee pour DESKTOP-9R7QBDD" name="conf_192_168_1_7">
+                    <webclient nameWebServer="unknown"/>
+                </configuration>
+            </node>
+            <node functional_type="WEBCLIENT" name="192.168.1.84">
+                <neighbour name="192.168.1.1"/>
+                <neighbour name="192.168.1.7"/>
+                <neighbour name="192.168.1.127"/>
+                <neighbour name="192.168.1.136"/>
+                <neighbour name="192.168.1.152"/>
+                <neighbour name="192.168.1.211"/>
+                <neighbour name="192.168.1.220"/>
+                <neighbour name="192.168.1.240"/>
+                <neighbour name="192.168.1.131"/>
+                <configuration description="Configuration auto-generee pour CONNECTTV_V3_SAGEMCOM_ABEB" name="conf_192_168_1_84">
+                    <webclient nameWebServer="unknown"/>
+                </configuration>
+            </node>
+            <node functional_type="WEBCLIENT" name="192.168.1.127">
+                <neighbour name="192.168.1.1"/>
+                <neighbour name="192.168.1.7"/>
+                <neighbour name="192.168.1.84"/>
+                <neighbour name="192.168.1.136"/>
+                <neighbour name="192.168.1.152"/>
+                <neighbour name="192.168.1.211"/>
+                <neighbour name="192.168.1.220"/>
+                <neighbour name="192.168.1.240"/>
+                <neighbour name="192.168.1.131"/>
+                <configuration description="Configuration auto-generee pour RsiVideotech" name="conf_192_168_1_127">
+                    <webclient nameWebServer="unknown"/>
+                </configuration>
+            </node>
+            <node functional_type="WEBCLIENT" name="192.168.1.136">
+                <neighbour name="192.168.1.1"/>
+                <neighbour name="192.168.1.7"/>
+                <neighbour name="192.168.1.84"/>
+                <neighbour name="192.168.1.127"/>
+                <neighbour name="192.168.1.152"/>
+                <neighbour name="192.168.1.211"/>
+                <neighbour name="192.168.1.220"/>
+                <neighbour name="192.168.1.240"/>
+                <neighbour name="192.168.1.131"/>
+                <configuration description="Configuration auto-generee pour None" name="conf_192_168_1_136">
+                    <webclient nameWebServer="unknown"/>
+                </configuration>
+            </node>
+            <node functional_type="WEBCLIENT" name="192.168.1.152">
+                <neighbour name="192.168.1.1"/>
+                <neighbour name="192.168.1.7"/>
+                <neighbour name="192.168.1.84"/>
+                <neighbour name="192.168.1.127"/>
+                <neighbour name="192.168.1.136"/>
+                <neighbour name="192.168.1.211"/>
+                <neighbour name="192.168.1.220"/>
+                <neighbour name="192.168.1.240"/>
+                <neighbour name="192.168.1.131"/>
+                <configuration description="Configuration auto-generee pour DESKTOP-9R7QBDD" name="conf_192_168_1_152">
+                    <webclient nameWebServer="unknown"/>
+                </configuration>
+            </node>
+            <node functional_type="WEBCLIENT" name="192.168.1.211">
+                <neighbour name="192.168.1.1"/>
+                <neighbour name="192.168.1.7"/>
+                <neighbour name="192.168.1.84"/>
+                <neighbour name="192.168.1.127"/>
+                <neighbour name="192.168.1.136"/>
+                <neighbour name="192.168.1.152"/>
+                <neighbour name="192.168.1.220"/>
+                <neighbour name="192.168.1.240"/>
+                <neighbour name="192.168.1.131"/>
+                <configuration description="Configuration auto-generee pour None" name="conf_192_168_1_211">
+                    <webclient nameWebServer="unknown"/>
+                </configuration>
+            </node>
+            <node functional_type="WEBCLIENT" name="192.168.1.220">
+                <neighbour name="192.168.1.1"/>
+                <neighbour name="192.168.1.7"/>
+                <neighbour name="192.168.1.84"/>
+                <neighbour name="192.168.1.127"/>
+                <neighbour name="192.168.1.136"/>
+                <neighbour name="192.168.1.152"/>
+                <neighbour name="192.168.1.211"/>
+                <neighbour name="192.168.1.240"/>
+                <neighbour name="192.168.1.131"/>
+                <configuration description="Configuration auto-generee pour None" name="conf_192_168_1_220">
+                    <webclient nameWebServer="unknown"/>
+                </configuration>
+            </node>
+            <node functional_type="WEBCLIENT" name="192.168.1.240">
+                <neighbour name="192.168.1.1"/>
+                <neighbour name="192.168.1.7"/>
+                <neighbour name="192.168.1.84"/>
+                <neighbour name="192.168.1.127"/>
+                <neighbour name="192.168.1.136"/>
+                <neighbour name="192.168.1.152"/>
+                <neighbour name="192.168.1.211"/>
+                <neighbour name="192.168.1.220"/>
+                <neighbour name="192.168.1.131"/>
+                <configuration description="Configuration auto-generee pour D2260Gr2" name="conf_192_168_1_240">
+                    <webclient nameWebServer="unknown"/>
+                </configuration>
+            </node>
+            <node functional_type="WEBCLIENT" name="192.168.1.131">
+                <neighbour name="192.168.1.1"/>
+                <neighbour name="192.168.1.7"/>
+                <neighbour name="192.168.1.84"/>
+                <neighbour name="192.168.1.127"/>
+                <neighbour name="192.168.1.136"/>
+                <neighbour name="192.168.1.152"/>
+                <neighbour name="192.168.1.211"/>
+                <neighbour name="192.168.1.220"/>
+                <neighbour name="192.168.1.240"/>
+                <configuration description="Configuration auto-generee pour None" name="conf_192_168_1_131">
+                    <webclient nameWebServer="unknown"/>
+                </configuration>
+            </node>
+        </graph>
+    </graphs>
+    <Constraints>
+        <NodeConstraints/>
+        <LinkConstraints/>
+    </Constraints>
+    <PropertyDefinition/>
+    <ParsingString/>
+</NFV>

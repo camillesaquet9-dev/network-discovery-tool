@@ -4,14 +4,37 @@ Ce guide permet de lancer rapidement un premier scan avec l'outil de decouverte 
 
 ## Installation
 
-1. Verifier que Python 3 et nmap sont installes :
+1. Verifier que Python 3, pip et nmap sont installes :
 
 ```bash
 python3 --version
+pip3 --version
 nmap --version
 ```
 
-2. Installer les dependances Python :
+Si pip n'est pas installe :
+- Sur Debian/Ubuntu : `sudo apt install python3-pip`
+- Sur Fedora : `sudo dnf install python3-pip`
+- Sur MacOS : `brew install python3` (pip inclus)
+
+2. Installer les dependances systeme (necessaires pour lxml) :
+
+Sur Debian/Ubuntu :
+```bash
+sudo apt install libxml2-dev libxslt-dev python3-dev
+```
+
+Sur Fedora :
+```bash
+sudo dnf install libxml2-devel libxslt-devel python3-devel
+```
+
+Sur MacOS :
+```bash
+brew install libxml2 libxslt
+```
+
+3. Installer les dependances Python :
 
 ```bash
 cd network_discovery_tool
@@ -26,31 +49,38 @@ pip3 install python-nmap scapy netifaces networkx matplotlib lxml flask tabulate
 
 ## Premier Scan
 
-### Scan Simple
+### Lancement avec Menu Interactif
 
-Pour lancer un scan basique du reseau local :
+Pour lancer l'outil avec le menu interactif (mode par defaut) :
 
 ```bash
 sudo python3 src/principal.py
 ```
 
-Le script va :
-- Detecter automatiquement votre reseau local
-- Scanner tous les equipements actifs
-- Identifier leur type (serveur web, firewall, etc.)
-- Generer les resultats dans le dossier `output/`
+Le script va d'abord :
+- Analyser la machine locale (interfaces, IP, passerelles)
+- Afficher les reseaux detectes automatiquement
+- Proposer un menu avec les differentes options
 
-Temps estime : 5-15 minutes selon la taille du reseau.
+### Menu Principal
 
-### Scan Approfondi
+Apres l'analyse initiale, le menu propose :
 
-Pour un scan plus detaille avec detection OS :
+1. **Scan rapide** - Scan leger avec detection basique (recommande pour commencer)
+2. **Scan approfondi** - Scan complet avec detection OS et version des services
+3. **Reseau specifique** - Entrer manuellement un reseau en CIDR
+4. **Configuration** - Modifier les parametres
+5. **Quitter** - Sortir du programme
+
+Pour un premier test, choisir l'option 1 (scan rapide).
+
+### Scan Sans Menu
+
+Pour lancer directement un scan sans passer par le menu :
 
 ```bash
-sudo python3 src/principal.py --deep
+sudo python3 src/principal.py --no-interactive
 ```
-
-Attention : ce mode est plus lent (15-30 minutes).
 
 ### Scan d'un Reseau Specifique
 
@@ -59,6 +89,18 @@ Si on connait le reseau a scanner :
 ```bash
 sudo python3 src/principal.py --target 192.168.1.0/24
 ```
+
+## Profondeur de Scan
+
+L'outil propose trois niveaux de profondeur :
+
+| Niveau | Description | Temps estime |
+|--------|-------------|--------------|
+| LEGER | Ports principaux, pas de detection OS | 3-5 min |
+| NORMAL | Detection version services | 5-15 min |
+| COMPLET | Detection OS + scripts NSE | 15-30 min |
+
+Le scan rapide utilise le niveau LEGER, le scan approfondi utilise COMPLET.
 
 ## Consulter les Resultats
 
@@ -88,7 +130,7 @@ Puis charger le fichier JSON dans l'interface a l'adresse http://localhost:5001
 
 ### Avec Pas de Cote Automatique
 
-Si des pivots sont detectes, on peut automatiser l'exploration :
+Si des pivots sont detectes, on peut automatiser l'exploratoin :
 
 ```bash
 sudo python3 src/principal.py --pas-de-cote --ssh-password "motdepasse"
@@ -121,6 +163,14 @@ sudo python3 src/principal.py --pas-de-cote --ssh-key ~/.ssh/pivot_key
 
 Le script necessite les privileges root pour certaines fonctionnalites. Utiliser `sudo`.
 
+Ou lancer le script en mode sans privileges root :
+
+```bash
+python3 src/principal.py --no-root
+```
+
+Ce mode utilise un scan TCP connect (-sT) et desactive la detection OS.
+
 ### Erreur "nmap: command not found"
 
 Installer nmap :
@@ -138,42 +188,59 @@ pip3 install nom_du_module
 
 ### Scan trop long
 
-Utiliser l'option `--quiet` et reduire le nombre de ports scannes en modifiant `config.py` :
+Quelques solutions :
+- Utiliser le scan rapide (option 1 du menu)
+- Reduire le nombre de reseaux a scanner via le menu
+- Modifier `config.py` pour reduire les ports scannes
 
-```python
-PORTS_TOP_NMAP = 100  # Au lieu de 1000
-```
-
-### Pas de pivot detecte
+### Aucun hote trouve
 
 Verifier que :
-- L'option `--no-pivot` n'est pas activee
-- Des reseaux bloques ont bien ete detectes
-- Les passerelles ont des ports d'acces ouverts (SSH, Telnet, etc.)
+- Le reseau cible est correct
+- La machine a bien une adresse IP sur ce reseau
+- Nmap est lance avec sudo (pour le scan ARP)
+
+### Tous les hotes sont UNKNOWN
+
+Cela peut arriver si :
+- Aucun port n'est ouvert sur les machines
+- Le firewall bloque les scans
+- Le scan est en mode LEGER (moins de detection)
+
+Essayer avec l'option scan approfondi pour avoir plus de details.
 
 ## Interpretation des Resultats
 
 ### Types d'Equipements
 
-- WEBSERVER : Serveur web (Apache, nginx, IIS)
-- FIREWALL : Pare-feu ou equipement de securite
-- ROUTER : Routeur reseau
-- NAT : Equipement faisant du NAT
-- DNS : Serveur DNS
-- MAILSERVER : Serveur de messagerie
-- DATABASE : Serveur de base de donnees
-- WEBCLIENT : Poste client
-- UNKNOWN : Type non determine
+- **WEBSERVER** : Serveur web (Apache, nginx, IIS)
+- **FIREWALL** : Pare-feu ou equipement de securite
+- **ROUTER** : Routeur reseau (souvent en .1 ou .254)
+- **NAT** : Equipement faisant du NAT
+- **DNS** : Serveur DNS (port 53)
+- **MAILSERVER** : Serveur de messagerie
+- **DATABASE** : Serveur de base de donnees
+- **PRINTER** : Imprimante reseau
+- **IOT** : Objet connecte (Raspberry, ESP32, etc.)
+- **WEBCLIENT** : Poste client avec peu de services
+- **UNKNOWN** : Type non determine
+
+### Detection des Routeurs
+
+Les routeurs sont detectes par :
+- Adresse IP se terminant par .1 ou .254
+- Fabricant MAC connu (Cisco, Juniper, Mikrotik, etc.)
+- OS identifie comme routeur (Cisco IOS, RouterOS, etc.)
 
 ### Niveau de Confiance des Pivots
 
-- HIGH : Pivot tres fiable (routeur/firewall avec SSH)
-- MEDIUM : Pivot moyennement fiable
-- LOW : Pivot peu fiable (a verifier manuellement)
+- **HIGH** : Pivot tres fiable (routeur/firewall avec SSH)
+- **MEDIUM** : Pivot moyennement fiable
+- **LOW** : Pivot peu fiable (a verifier manuellment)
 
 ## Support
 
 Pour les problemes specifiques ou questions :
 - Consulter les logs dans le dossier `logs/`
 - Verifier la documentation complete dans `README.md`
-- Tester avec l'option `--quiet` desactivee pour voir plus de details
+- Lancer sans l'option `--quiet` pour voir plus de details

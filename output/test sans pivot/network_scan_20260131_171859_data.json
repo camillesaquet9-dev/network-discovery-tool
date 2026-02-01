@@ -1,0 +1,225 @@
+{
+  "metadonnees_scan": {
+    "outil": "Network Discovery Tool",
+    "version": "1.0",
+    "horodatage": null
+  },
+  "reseaux_decouverts": [
+    "192.168.1.0/24"
+  ],
+  "hotes_decouverts": [
+    {
+      "ip": "192.168.1.1",
+      "mac": "54:49:FC:38:63:1F",
+      "nom_hote": "GEN8",
+      "os": null,
+      "precision_os": null,
+      "ports": [],
+      "services": [],
+      "sortie_scripts": {},
+      "fabricant_mac": "Ubee Interactive, Limited",
+      "type_fonctionnel": "WEBCLIENT"
+    },
+    {
+      "ip": "192.168.1.7",
+      "mac": "AC:9E:17:81:57:F8",
+      "nom_hote": "DESKTOP-9R7QBDD",
+      "os": null,
+      "precision_os": null,
+      "ports": [],
+      "services": [],
+      "sortie_scripts": {},
+      "fabricant_mac": "ASUSTek Computer",
+      "type_fonctionnel": "WEBCLIENT"
+    },
+    {
+      "ip": "192.168.1.84",
+      "mac": "62:F4:59:4E:2F:9E",
+      "nom_hote": "CONNECTTV_V3_SAGEMCOM_ABEB",
+      "os": null,
+      "precision_os": null,
+      "ports": [],
+      "services": [],
+      "sortie_scripts": {},
+      "type_fonctionnel": "WEBCLIENT"
+    },
+    {
+      "ip": "192.168.1.127",
+      "mac": "90:90:60:10:D4:D1",
+      "nom_hote": "RsiVideotech",
+      "os": null,
+      "precision_os": null,
+      "ports": [],
+      "services": [],
+      "sortie_scripts": {},
+      "fabricant_mac": "RSI Video Technologies",
+      "type_fonctionnel": "WEBCLIENT"
+    },
+    {
+      "ip": "192.168.1.136",
+      "mac": "16:E2:DB:FA:CC:7F",
+      "nom_hote": null,
+      "os": null,
+      "precision_os": null,
+      "ports": [
+        {
+          "port": 49152,
+          "protocole": "tcp",
+          "etat": "open",
+          "service": "tcpwrapped",
+          "produit": null,
+          "version": null,
+          "info": null
+        },
+        {
+          "port": 62078,
+          "protocole": "tcp",
+          "etat": "open",
+          "service": "tcpwrapped",
+          "produit": null,
+          "version": null,
+          "info": null
+        }
+      ],
+      "services": [
+        {
+          "port": 49152,
+          "nom": "tcpwrapped",
+          "description": "tcpwrapped"
+        },
+        {
+          "port": 62078,
+          "nom": "tcpwrapped",
+          "description": "tcpwrapped"
+        }
+      ],
+      "sortie_scripts": {},
+      "type_fonctionnel": "WEBCLIENT"
+    },
+    {
+      "ip": "192.168.1.152",
+      "mac": "00:E0:4C:45:C1:D2",
+      "nom_hote": "DESKTOP-9R7QBDD",
+      "os": null,
+      "precision_os": null,
+      "ports": [],
+      "services": [],
+      "sortie_scripts": {},
+      "fabricant_mac": "Realtek Semiconductor",
+      "type_fonctionnel": "WEBCLIENT"
+    },
+    {
+      "ip": "192.168.1.211",
+      "mac": "2C:1B:3A:CB:1E:AB",
+      "nom_hote": null,
+      "os": null,
+      "precision_os": null,
+      "ports": [],
+      "services": [],
+      "sortie_scripts": {},
+      "type_fonctionnel": "WEBCLIENT"
+    },
+    {
+      "ip": "192.168.1.220",
+      "mac": "9E:C2:34:32:50:30",
+      "nom_hote": null,
+      "os": null,
+      "precision_os": null,
+      "ports": [
+        {
+          "port": 49152,
+          "protocole": "tcp",
+          "etat": "open",
+          "service": "tcpwrapped",
+          "produit": null,
+          "version": null,
+          "info": null
+        },
+        {
+          "port": 62078,
+          "protocole": "tcp",
+          "etat": "open",
+          "service": "iphone-sync",
+          "produit": null,
+          "version": null,
+          "info": null
+        }
+      ],
+      "services": [
+        {
+          "port": 49152,
+          "nom": "tcpwrapped",
+          "description": "tcpwrapped"
+        },
+        {
+          "port": 62078,
+          "nom": "iphone-sync",
+          "description": "iphone-sync"
+        }
+      ],
+      "sortie_scripts": {},
+      "type_fonctionnel": "WEBCLIENT"
+    },
+    {
+      "ip": "192.168.1.240",
+      "mac": "C8:70:23:F6:0C:4F",
+      "nom_hote": "D2260Gr2",
+      "os": null,
+      "precision_os": null,
+      "ports": [
+        {
+          "port": 22,
+          "protocole": "tcp",
+          "etat": "open",
+          "service": "ssh",
+          "produit": "Dropbear sshd",
+          "version": "2020.81",
+          "info": "protocol 2.0"
+        },
+        {
+          "port": 49152,
+          "protocole": "tcp",
+          "etat": "open",
+          "service": "upnp",
+          "produit": "Cisco-Linksys E4200 WAP upnpd",
+          "version": null,
+          "info": "UPnP 1.0"
+        }
+      ],
+      "services": [
+        {
+          "port": 22,
+          "nom": "ssh",
+          "description": "ssh (Dropbear sshd 2020.81)"
+        },
+        {
+          "port": 49152,
+          "nom": "upnp",
+          "description": "upnp (Cisco-Linksys E4200 WAP upnpd)"
+        }
+      ],
+      "sortie_scripts": {},
+      "fabricant_mac": "Altice Labs",
+      "type_fonctionnel": "WEBCLIENT"
+    },
+    {
+      "ip": "192.168.1.131",
+      "mac": null,
+      "nom_hote": null,
+      "os": null,
+      "precision_os": null,
+      "ports": [],
+      "services": [],
+      "sortie_scripts": {},
+      "type_fonctionnel": "WEBCLIENT"
+    }
+  ],
+  "reseaux_bloques": [],
+  "pivots_suggeres": [],
+  "statistiques": {
+    "total_hotes": 10,
+    "total_reseaux": 1,
+    "reseaux_bloques": 0,
+    "pivots": 0
+  }
+}

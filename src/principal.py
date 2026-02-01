@@ -19,6 +19,7 @@ from constructeur_topologie import ConstructeurTopologie
 from exporteur_verefoo import ExporteurVerefoo
 from generateur_rapports import GenerateurRapports
 from mouvement_lateral import GestionnaireMouvementLateral
+from menu_interactif import MenuInteractif, AnalyseurMachineLocale
 
 def configurer_logging(niveau=logging.INFO):
     config.creer_repertoires()
@@ -57,21 +58,41 @@ class OrchestrateurDecouverteReseau:
         self.exporteur_verefoo = ExporteurVerefoo()
         self.generateur_rapports = GenerateurRapports()
         self.mouvement_lateral = GestionnaireMouvementLateral()
+        self.menu = MenuInteractif()
+        self.analyseur = AnalyseurMachineLocale()
 
         self.hotes_decouverts = []
         self.reseaux = []
         self.reseaux_bloques = []
         self.pivots = []
         self.graphe = None
+        self.profondeur_scan = config.PROFONDEUR_NORMAL
+        self.mode_interactif = config.MODE_INTERACTIF and not args.quiet
+
+        if not hasattr(self.args, 'explorer_voisins'):
+            self.args.explorer_voisins = False
 
     def executer(self):
-        self.logger.info("")
-        self.logger.info("DEMARRAGE DE LA DECOUVERTE RESEAU")
-        self.logger.info("")
-
         try:
+            if self.mode_interactif:
+                self.menu.effacer_ecran()
+                self.menu.afficher_banniere()
+
+            self.logger.info("")
+            self.logger.info("DEMARRAGE DE LA DECOUVERTE RESEAU")
+            self.logger.info("")
+
             self.logger.info("PHASE 1: Reconnaissance locale")
             info_locale = self.phase1_reconnaissance_locale()
+
+            if self.mode_interactif:
+                self.menu.afficher_info_machine(info_locale)
+                contexte = self.analyseur.analyser_contexte(info_locale)
+
+                choix = self.afficher_menu_et_obtenir_choix(info_locale, contexte)
+                if choix is None:
+                    self.logger.info("Arret demande par l'utilisateur")
+                    sys.exit(0)
 
             self.logger.info("")
             self.logger.info("PHASE 2: Decouverte des reseaux et hotes")
@@ -81,7 +102,7 @@ class OrchestrateurDecouverteReseau:
             self.logger.info("PHASE 3: Fingerprinting et inference de type")
             self.phase3_fingerprinting()
 
-            if not self.args.no_pivot:
+            if not self.args.no_pivot and self.args.explorer_voisins:
                 self.logger.info("")
                 self.logger.info("PHASE 4: Exploration des frontieres")
                 self.phase4_exploration_frontieres()
@@ -110,6 +131,37 @@ class OrchestrateurDecouverteReseau:
             self.logger.error(f"\nErreur fatale: {e}", exc_info=True)
             sys.exit(1)
 
+    def afficher_menu_et_obtenir_choix(self, info_locale: Dict, contexte: Dict):
+        choix = self.menu.afficher_menu_principal()
+
+        if choix == 5:
+            return None
+
+        if choix == 1:
+            self.profondeur_scan = config.PROFONDEUR_LEGER
+            self.args.explorer_voisins = False
+
+        elif choix == 2:
+            self.profondeur_scan = config.PROFONDEUR_COMPLET
+            self.args.explorer_voisins = False
+
+        elif choix == 3:
+            profondeur = self.menu.afficher_menu_profondeur()
+            if profondeur:
+                self.profondeur_scan = profondeur
+            self.args.explorer_voisins = True
+
+        elif choix == 4:
+            reseau = self.menu.demander_reseau_manuel()
+            if reseau:
+                self.args.target = reseau
+            profondeur = self.menu.afficher_menu_profondeur()
+            if profondeur:
+                self.profondeur_scan = profondeur
+            self.args.explorer_voisins = False
+
+        return choix
+
     def phase1_reconnaissance_locale(self) -> Dict:
         info_locale = self.recon_locale.executer_reconnaissance_complete()
 
@@ -130,6 +182,17 @@ class OrchestrateurDecouverteReseau:
             for reseau in reseaux_cibles:
                 self.logger.info(f"    - {reseau}")
 
+        if self.mode_interactif and len(reseaux_cibles) > config.MAX_RESEAUX_SANS_CONFIRMATION:
+            self.menu.afficher_reseaux_detectes(reseaux_cibles)
+            reseaux_cibles = self.menu.selectionner_reseaux(reseaux_cibles, "SELECTION DES RESEAUX")
+            if not reseaux_cibles:
+                self.logger.info("  Aucun reseau selectionne")
+                return
+
+        profondeur = self.profondeur_scan
+        if self.args.deep:
+            profondeur = config.PROFONDEUR_COMPLET
+
         reseaux_scannes = set()
         iteration = 0
 
@@ -144,7 +207,7 @@ class OrchestrateurDecouverteReseau:
 
             self.logger.info(f"  Scan du reseau {reseau}")
 
-            hotes = self.scanner_nmap.scanner_reseau(reseau, approfondi=self.args.deep)
+            hotes = self.scanner_nmap.scanner_reseau(reseau, profondeur=profondeur)
 
             if hotes:
                 self.hotes_decouverts.extend(hotes)
@@ -165,11 +228,42 @@ class OrchestrateurDecouverteReseau:
     def phase4_exploration_frontieres(self):
         resultats_exploration = self.explorateur_frontieres.explorer_au_dela_connu(
             self.reseaux,
-            self.hotes_decouverts
+            self.hotes_decouverts,
+            limite=10
         )
 
         reseaux_candidats = resultats_exploration.get("reseaux_candidats", [])
         self.reseaux_bloques = resultats_exploration.get("reseaux_bloques", [])
+
+        if reseaux_candidats:
+            self.logger.info(f"  {len(reseaux_candidats)} nouveaux reseaux accessibles detectes")
+
+            if self.mode_interactif:
+                self.menu.afficher_reseaux_detectes(reseaux_candidats, "RESEAUX VOISINS DETECTES")
+                reseaux_candidats = self.menu.selectionner_reseaux(
+                    reseaux_candidats,
+                    "SELECTION DES RESEAUX A EXPLORER"
+                )
+                if not reseaux_candidats:
+                    self.logger.info("  Aucun reseau selectionne pour exploration")
+                    return
+
+            self.logger.info("  Scan des nouveaux reseaux...")
+
+            profondeur = self.profondeur_scan
+            if self.args.deep:
+                profondeur = config.PROFONDEUR_COMPLET
+
+            for reseau in reseaux_candidats:
+                if reseau not in self.reseaux:
+                    self.logger.info(f"    Scan de {reseau}")
+                    hotes = self.scanner_nmap.scanner_reseau(reseau, profondeur=profondeur)
+
+                    if hotes:
+                        hotes = self.inference_type.annoter_plusieurs_hotes(hotes)
+                        self.hotes_decouverts.extend(hotes)
+                        self.reseaux.append(reseau)
+                        self.logger.info(f"    {len(hotes)} hotes trouves sur {reseau}")
 
         if self.reseaux_bloques:
             self.reseaux_bloques = self.explorateur_frontieres.analyser_blocages(self.reseaux_bloques)
@@ -301,8 +395,23 @@ class OrchestrateurDecouverteReseau:
             "pivots": self.pivots
         }
 
-        resume = self.generateur_rapports.generer_resume_console(donnees_scan)
-        print("\n" + resume)
+        if self.mode_interactif:
+            nb_ports = sum(len(h.get("ports", [])) for h in self.hotes_decouverts)
+            types = {}
+            for h in self.hotes_decouverts:
+                t = h.get("type_fonctionnel", "UNKNOWN")
+                types[t] = types.get(t, 0) + 1
+
+            stats = {
+                "nb_reseaux": len(self.reseaux),
+                "nb_hotes": len(self.hotes_decouverts),
+                "nb_ports": nb_ports,
+                "types": types
+            }
+            self.menu.afficher_resume_decouverte(stats)
+        else:
+            resume = self.generateur_rapports.generer_resume_console(donnees_scan)
+            print("\n" + resume)
 
 
 def analyser_arguments():
@@ -329,6 +438,19 @@ def analyser_arguments():
     )
 
     parser.add_argument(
+        "--explorer-voisins",
+        action="store_true",
+        default=False,
+        help="Active l'exploration des reseaux voisins"
+    )
+
+    parser.add_argument(
+        "--no-menu",
+        action="store_true",
+        help="Desactive le menu interactif"
+    )
+
+    parser.add_argument(
         "--output-dir",
         type=str,
         help=f"Repertoire de sortie personnalise (defaut: {config.REPERTOIRE_SORTIE})"
@@ -338,6 +460,12 @@ def analyser_arguments():
         "--quiet",
         action="store_true",
         help="Mode silencieux (logs WARNING et au-dessus uniquement)"
+    )
+
+    parser.add_argument(
+        "--no-root",
+        action="store_true",
+        help="Mode sans privileges root (scan TCP connect, pas de detection OS)"
     )
 
     parser.add_argument(
@@ -375,22 +503,36 @@ def main():
         config.REPERTOIRE_SORTIE = args.output_dir
         config.creer_repertoires()
 
+    if args.no_menu:
+        config.MODE_INTERACTIF = False
+
     niveau_log = logging.WARNING if args.quiet else logging.INFO
     logger = configurer_logging(niveau_log)
 
     if os.geteuid() != 0:
-        logger.warning("Attention: Ce script necessite les privileges root pour:")
-        logger.warning("   - Scan ARP")
-        logger.warning("   - Detection OS")
-        logger.warning("   - Certains scripts NSE")
-        logger.warning("")
-        logger.warning("   Relancez avec: sudo python3 principal.py")
-        logger.warning("")
+        if args.no_root:
+            logger.info("Mode sans privileges root active")
+            logger.info("  - Utilisation scan TCP connect (-sT)")
+            logger.info("  - Detection OS desactivee")
+            logger.info("  - Certains scripts NSE desactives")
+            config.MODE_SANS_ROOT = True
+            config.ACTIVER_DETECTION_OS = False
+        else:
+            logger.warning("Attention: Ce script necessite les privileges root pour:")
+            logger.warning("   - Scan ARP")
+            logger.warning("   - Detection OS")
+            logger.warning("   - Certains scripts NSE")
+            logger.warning("")
+            logger.warning("   Relancez avec: sudo python3 principal.py")
+            logger.warning("   Ou utilisez: python3 principal.py --no-root")
+            logger.warning("")
 
-        reponse = input("Continuer sans privileges root ? [o/N] ")
-        if reponse.lower() not in ['o', 'oui', 'y', 'yes']:
-            logger.info("Arret du script.")
-            sys.exit(0)
+            reponse = input("Continuer sans privileges root ? [o/N] ")
+            if reponse.lower() not in ['o', 'oui', 'y', 'yes']:
+                logger.info("Arret du script.")
+                sys.exit(0)
+            config.MODE_SANS_ROOT = True
+            config.ACTIVER_DETECTION_OS = False
 
     orchestrateur = OrchestrateurDecouverteReseau(args)
     orchestrateur.executer()

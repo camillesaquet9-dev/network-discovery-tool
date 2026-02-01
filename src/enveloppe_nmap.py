@@ -9,10 +9,15 @@ import ipaddress
 from config import (
     TIMING_NMAP,
     PORTS_TOP_NMAP,
+    PORTS_SPECIFIQUES,
     TIMEOUT_HOTE_NMAP,
     ACTIVER_DETECTION_OS,
     ACTIVER_SCRIPTS_NSE,
-    SCRIPTS_NSE
+    SCRIPTS_NSE,
+    MODE_SANS_ROOT,
+    PROFONDEUR_LEGER,
+    PROFONDEUR_NORMAL,
+    PROFONDEUR_COMPLET
 )
 
 logger = logging.getLogger(__name__)
@@ -117,27 +122,43 @@ class ScannerNmap:
 
         return hotes_actifs
 
-    def scanner_hote(self, ip: str, approfondi: bool = True) -> Optional[Dict]:
-        logger.info(f"[ScannerNmap] Scan detaille de {ip} (approfondi={approfondi})")
+    def scanner_hote(self, ip: str, profondeur: int = PROFONDEUR_NORMAL) -> Optional[Dict]:
+        logger.info(f"[ScannerNmap] Scan detaille de {ip} (profondeur={profondeur})")
 
+        chemin_temp = None
         try:
             with tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False) as temp_file:
                 chemin_temp = temp_file.name
 
-            cmd = [
-                "nmap",
-                "-sV",
-                "--version-all",
+            cmd = ["nmap"]
+
+            if MODE_SANS_ROOT:
+                cmd.append("-sT")
+            else:
+                cmd.append("-sS")
+
+            if profondeur >= PROFONDEUR_NORMAL:
+                cmd.append("-sV")
+                cmd.append("--version-intensity")
+                if profondeur >= PROFONDEUR_COMPLET:
+                    cmd.append("5")
+                else:
+                    cmd.append("2")
+
+            ports_str = ",".join(str(p) for p in PORTS_SPECIFIQUES)
+            cmd.extend([
                 f"-T{TIMING_NMAP}",
-                f"--top-ports", str(PORTS_TOP_NMAP),
+                "-p", ports_str,
                 "--host-timeout", f"{TIMEOUT_HOTE_NMAP}s",
-            ]
+                "--max-retries", "1",
+                "-Pn",
+            ])
 
-            if approfondi and ACTIVER_DETECTION_OS:
-                cmd.extend(["-O", "--osscan-guess"])
+            if ACTIVER_DETECTION_OS and not MODE_SANS_ROOT and profondeur >= PROFONDEUR_NORMAL:
+                cmd.extend(["-O", "--osscan-guess", "--osscan-limit"])
 
-            if approfondi and ACTIVER_SCRIPTS_NSE:
-                cmd.extend(["-sC", "--script", SCRIPTS_NSE])
+            if profondeur >= PROFONDEUR_COMPLET and ACTIVER_SCRIPTS_NSE:
+                cmd.extend(["--script", "default"])
 
             cmd.extend(["-oX", chemin_temp, ip])
 
@@ -147,29 +168,49 @@ class ScannerNmap:
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=TIMEOUT_HOTE_NMAP * 3
+                timeout=TIMEOUT_HOTE_NMAP * 4
             )
 
+            donnees_hote = None
             if os.path.exists(chemin_temp):
-                donnees_hote = self._analyser_xml_scan_hote(chemin_temp)
+                donnees_hote = self._analyser_xml_scan_hote(chemin_temp, ip)
                 os.unlink(chemin_temp)
-                return donnees_hote
+
+            if donnees_hote is None:
+                donnees_hote = self._creer_hote_basique(ip)
+
+            return donnees_hote
 
         except subprocess.TimeoutExpired:
             logger.warning(f"[ScannerNmap] Timeout scan de {ip}")
-            if os.path.exists(chemin_temp):
-                donnees_hote = self._analyser_xml_scan_hote(chemin_temp)
+            donnees_hote = None
+            if chemin_temp and os.path.exists(chemin_temp):
+                donnees_hote = self._analyser_xml_scan_hote(chemin_temp, ip)
                 os.unlink(chemin_temp)
-                return donnees_hote
+            if donnees_hote is None:
+                donnees_hote = self._creer_hote_basique(ip)
+            return donnees_hote
 
         except Exception as e:
             logger.error(f"[ScannerNmap] Erreur scan de {ip}: {e}")
-            if os.path.exists(chemin_temp):
+            if chemin_temp and os.path.exists(chemin_temp):
                 os.unlink(chemin_temp)
+            return self._creer_hote_basique(ip)
 
-        return None
+    def _creer_hote_basique(self, ip: str) -> Dict:
+        return {
+            "ip": ip,
+            "mac": None,
+            "nom_hote": None,
+            "os": None,
+            "precision_os": None,
+            "ports": [],
+            "services": [],
+            "sortie_scripts": {},
+            "scan_incomplet": True
+        }
 
-    def _analyser_xml_scan_hote(self, chemin_xml: str) -> Optional[Dict]:
+    def _analyser_xml_scan_hote(self, chemin_xml: str, ip_fallback: str = None) -> Optional[Dict]:
         try:
             arbre = ET.parse(chemin_xml)
             racine = arbre.getroot()
@@ -183,7 +224,7 @@ class ScannerNmap:
                 return None
 
             donnees_hote = {
-                "ip": None,
+                "ip": ip_fallback,
                 "mac": None,
                 "nom_hote": None,
                 "os": None,
@@ -225,10 +266,12 @@ class ScannerNmap:
                     protocole = port.get("protocol")
 
                     elem_etat = port.find("state")
-                    if elem_etat is None:
-                        continue
+                    etat_port = "unknown"
+                    if elem_etat is not None:
+                        etat_port = elem_etat.get("state", "unknown")
 
-                    etat_port = elem_etat.get("state")
+                    if etat_port not in ["open", "open|filtered"]:
+                        continue
 
                     elem_service = port.find("service")
                     nom_service = None
@@ -288,8 +331,8 @@ class ScannerNmap:
 
         return None
 
-    def scanner_reseau(self, reseau: str, approfondi: bool = False) -> List[Dict]:
-        logger.info(f"[ScannerNmap] Scan reseau complet: {reseau} (approfondi={approfondi})")
+    def scanner_reseau(self, reseau: str, profondeur: int = PROFONDEUR_NORMAL) -> List[Dict]:
+        logger.info(f"[ScannerNmap] Scan reseau complet: {reseau} (profondeur={profondeur})")
 
         hotes_actifs = self.balayage_ping(reseau)
 
@@ -299,7 +342,7 @@ class ScannerNmap:
 
         resultats = []
         for ip in hotes_actifs:
-            donnees_hote = self.scanner_hote(ip, approfondi=approfondi)
+            donnees_hote = self.scanner_hote(ip, profondeur=profondeur)
             if donnees_hote:
                 resultats.append(donnees_hote)
 

@@ -7,7 +7,7 @@ Document d'architecture pour le projet de decouverte reseau automatisee.
 Le projet est structure en plusieurs couches :
 
 ```
-Interface Utilisateur (CLI + Web)
+Interface Utilisateur (Menu Interactif + Web)
            |
     Orchestrateur (principal.py)
            |
@@ -25,13 +25,41 @@ Centralise tous les parametres de configuration :
 - Seuils pour l'inference de type
 - Chemins de sortie
 - Couleurs pour la visualisation
+- Mode interactif
 
 Variables importantes :
 - TIMING_NMAP : Vitesse de scan (0-5)
-- PORTS_TOP_NMAP : Nombre de ports a scanner
+- PORTS_SPECIFIQUES : Liste des ports a scanner
 - MAX_ITERATIONS_DECOUVERTE : Profondeur de l'exploration
+- MODE_INTERACTIF : Active/desactive le menu
+- PLAGE_EXPLORATION_OCTET : Etendue de l'exploration reseau
 
-### 2. Reconnaissance Locale (utilitaires_reseau.py)
+Niveaux de profondeur :
+- PROFONDEUR_LEGER (1) : Scan basique
+- PROFONDEUR_NORMAL (2) : Avec detection version
+- PROFONDEUR_COMPLET (3) : Detection OS + scripts NSE
+
+### 2. Menu Interactif (menu_interactif.py)
+
+Classes : MenuInteractif, AnalyseurMachineLocale
+
+Module ajoute pour fournir une interface utilisateur en ligne de commande.
+
+Responsabilites :
+- Analyse de la machine locale au demarrage
+- Affichage du contexte reseau (interfaces, IPs, passerelles)
+- Menu de selection du type de scan
+- Selection des reseaux a scanner
+- Confirmation avant chaque operation
+
+Methodes principales :
+- afficher_banniere() : Affiche le titre du programme
+- afficher_info_machine() : Montre les infos de la machine locale
+- afficher_menu_principal() : Menu de choix
+- selectionner_reseaux() : Permet de choisir les reseaux
+- confirmer_scan_reseaux() : Demande confirmaton avant scan
+
+### 3. Reconnaissance Locale (utilitaires_reseau.py)
 
 Classe : ReconnaissanceLocale
 
@@ -48,7 +76,7 @@ Methodes principales :
 - obtenir_routes()
 - obtenir_cibles_initiales()
 
-### 3. Scanner Nmap (enveloppe_nmap.py)
+### 4. Scanner Nmap (enveloppe_nmap.py)
 
 Classe : ScannerNmap
 
@@ -56,13 +84,18 @@ Encapsule les appels a nmap et le parsing XML.
 
 Methodes principales :
 - balayage_ping() : Detection d'hotes actifs
-- scanner_hote() : Scan detaille d'un equipement
+- scanner_hote(ip, profondeur) : Scan detaille avec niveau de profondeur
 - scanner_reseau() : Scan complet d'un reseau
 - traceroute() : Trace de route vers une cible
 
+Le parametre profondeur controle :
+- LEGER : Scan SYN basique
+- NORMAL : Ajout de -sV pour detection version
+- COMPLET : Ajout de -O et scripts NSE
+
 Utilise des fichiers XML temporaires pour recuperer les resultats nmap.
 
-### 4. Inference de Type (inference_type.py)
+### 5. Inference de Type (inference_type.py)
 
 Classe : MoteurInferenceType
 
@@ -70,26 +103,46 @@ Determine le type fonctionel d'un equipement base sur :
 - Ports ouverts/filtres
 - Services detectes
 - Banniere OS
+- Fabricant MAC (via OUI)
+- Adresse IP (detection routeur par .1/.254)
+- Nom d'hote
 - Sorties de scripts NSE
 
 Types supportes :
-- WEBSERVER, WEBCLIENT, FIREWALL, NAT, DNS, MAILSERVER, DATABASE, ROUTER
+- WEBSERVER, WEBCLIENT, FIREWALL, NAT, DNS, MAILSERVER, DATABASE, ROUTER, PRINTER, IOT, UNKNOWN
+
+Listes de fabricants pour detection :
+- FABRICANTS_ROUTEUR : Cisco, Juniper, Mikrotik, etc.
+- FABRICANTS_SERVEUR : Dell, HP, IBM, etc.
+- FABRICANTS_IOT : Espressif, Raspberry, Arduino, etc.
+- FABRICANTS_IMPRIMANTE : HP, Canon, Epson, Brother, etc.
 
 Heuristiques :
+- ROUTER : IP en .1/.254 ou fabricant reseau connu
 - FIREWALL : Nombreux ports filtres + mots-cles
 - WEBSERVER : Ports 80/443 + services HTTP
 - DNS : Port 53 ouvert
-- etc.
+- PRINTER : Ports 9100/515/631 ou fabricant imprimante
+- IOT : Fabricant IoT ou ports MQTT (1883)
+- UNKNOWN : Si aucun critere ne correspond
 
-### 5. Exploration des Frontieres (explorateur_frontieres.py)
+### 6. Exploration des Frontieres (explorateur_frontieres.py)
 
 Classe : ExplorateurFrontieres
 
 Responsabilites :
 - Identification des passerelles (routeurs, firewalls)
 - Generation de reseaux candidats adjacents
+- Filtrage des reseaux virtuels (Docker, link-local, CGNAT)
 - Test d'accessibilite via ping et traceroute
 - Categorisation des blocages
+
+Filtrage automatique des reseaux :
+- 169.254.x.x (link-local)
+- 172.17.x.x et 172.18.x.x (Docker)
+- 100.64.x.x (CGNAT)
+
+Parametre limite pour controler le nombre de reseaux explores.
 
 Types de blocage :
 - FIREWALL_FILTERED : Blocage explicite
@@ -97,7 +150,7 @@ Types de blocage :
 - TIMEOUT : Pas de reponse
 - ROUTING_STOPPED : Traceroute arrete
 
-### 6. Detection de Pivots (detecteur_pivot.py)
+### 7. Detection de Pivots (detecteur_pivot.py)
 
 Classe : DetecteurPivot
 
@@ -114,7 +167,7 @@ Scoring de confiance :
 - MEDIUM : Score >= 3
 - LOW : Score < 3
 
-### 7. Mouvement Lateral (mouvement_lateral.py)
+### 8. Mouvement Lateral (mouvement_lateral.py)
 
 Classe : GestionnaireMouvementLateral
 
@@ -133,7 +186,7 @@ Processus :
 5. Fusion avec les donnees principales
 6. Nettoyage du pivot
 
-### 8. Construction de Topologie (constructeur_topologie.py)
+### 9. Construction de Topologie (constructeur_topologie.py)
 
 Classe : ConstructeurTopologie
 
@@ -153,7 +206,7 @@ Fonctionnalites :
 - Calcul de centralite (noeuds critiques)
 - Recherche de chemins
 
-### 9. Export Verefoo (exporteur_verefoo.py)
+### 10. Export Verefoo (exporteur_verefoo.py)
 
 Classe : ExporteurVerefoo
 
@@ -170,7 +223,7 @@ Structure XML :
 - configuration : Config specifique au type
 - PropertyDefinition : Proprietes de reachability
 
-### 10. Generation de Rapports (generateur_rapports.py)
+### 11. Generation de Rapports (generateur_rapports.py)
 
 Classe : GenerateurRapports
 
@@ -188,26 +241,39 @@ Sections :
 
 Utilise tabulate pour le formatage de tableaux.
 
-### 11. Orchestrateur (principal.py)
+### 12. Orchestrateur (principal.py)
 
 Classe : OrchestrateurDecouverteReseau
 
 Coordonne l'execution de toutes les phases.
 
-Phases :
+Integration du menu interactif :
+1. Analyse machine locale via AnalyseurMachineLocale
+2. Affichage du contexte via MenuInteractif
+3. Selection du mode de scan par l'utilisateur
+4. Configuration de la profondeur selon le choix
+
+Phases d'execution :
 1. Reconnaissance locale
-2. Decouverte reseau (iterative)
-3. Fingerprinting et inference de type
-4. Exploration des frontieres
-5. Construction de la topologie
-6. Export des resultats
-7. Generation des rapports
+2. Affichage menu (si mode interactif)
+3. Decouverte reseau (iterative)
+4. Fingerprinting et inference de type
+5. Exploration des frontieres
+6. Construction de la topologie
+7. Export des resultats
+8. Generation des rapports
 
 Gere aussi les arguments de ligne de commande et la configuration du logging.
 
 ## Flux de Donnees
 
 ```
+Analyse Machine Locale
+        |
+        v
+   Menu Interactif
+        |
+        v
 Interfaces/Routes/ARP
         |
         v
@@ -288,15 +354,17 @@ Construction graphe
 ## Performance
 
 Temps de scan moyens (reseau /24) :
-- Scan simple : 5-10 minutes
-- Scan approfondi : 15-30 minutes
+- Scan LEGER : 3-5 minutes
+- Scan NORMAL : 5-15 minutes
+- Scan COMPLET : 15-30 minutes
 - Avec pas de cote : Variable selon nombre de pivots
 
 Optimisations possibles :
-- Reduire PORTS_TOP_NMAP
+- Reduire PORTS_SPECIFIQUES dans config.py
 - Augmenter TIMING_NMAP
-- Desactiver ACTIVER_DETECTION_OS
+- Reduire PLAGE_EXPLORATION_OCTET
 - Limiter MAX_ITERATIONS_DECOUVERTE
+- Utiliser le niveau LEGER pour un premier apercu
 
 ## Dependances Externes
 
